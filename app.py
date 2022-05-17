@@ -1,6 +1,6 @@
-from os import abort
+# from os import abort
 import sys
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -19,8 +19,8 @@ class Todo(db.Model):
     completed = db.Column(db.Boolean, nullable=False, default=False)
 
 
-def __repr__(self):
-    return f'<Todo {self.id} name: {self.name}>'
+    def __repr__(self):
+      return f'<Todo {self.id} name: {self.description}>'
 
 
 # db.create_all()
@@ -36,25 +36,42 @@ def create_todo():
     error = False
     try:
         description = request.get_json()['description']
-        todo = Todo(description=description)
-        body['description'] = todo.description
+        todo = Todo(description=description, completed=False)
         db.session.add(todo)
         db.session.commit()
+        body['id'] = todo.id
+        body['completed'] = todo.completed
+        body['description'] = todo.description
     except:
         error = True
         db.session.rollback()
         print(sys.exc_info())
     finally:
         db.session.close()
-        if error == True:
-            abort(400)
-        else:
-            return jsonify(body)
+    if error == True:
+        abort(400)
+    else:
+        return jsonify(body)
+
+
+@app.route('/todos/<todo_id>/set-completed', methods=['POST'])
+def set_completed_todo(todo_id):
+    try:
+        completed = request.get_json()['completed']
+        print('completed', completed)
+        todo = Todo.query.get(todo_id)
+        todo.completed = completed
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return redirect(url_for('index'))
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.all())
+    return render_template('index.html', data=Todo.query.order_by('id').all())
 
 
 # always include this at the bottom of your code
