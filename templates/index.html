@@ -11,7 +11,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      width: 300px;
+      width: 400px;
     }
 
      li {
@@ -58,7 +58,6 @@
     for (let i = 0; i < checkboxes.length; i++) {
       const checkbox = checkboxes[i];
       checkbox.onchange = function (e) {
-        console.log('event', e);
         const newCompleted = e.target.checked;
         const todoId = e.target.dataset['id'];
         fetch('/todos/' + todoId + '/set-completed', {
@@ -101,6 +100,7 @@
           liItem.innerHTML = jsonResponse['description'];
           document.getElementById('todos').appendChild(liItem);
           document.getElementById('error').classname = 'hidden';
+          descInput.value="";
         })
         .catch(function () {
 
@@ -115,16 +115,9 @@
       const deletebutton = deletebuttons[i];
       deletebutton.onclick = function (e) {
         console.log('event', e);
-        const newCompleted = e.target.checked;
         const todoId = e.target.dataset['id'];
         fetch('/todos/' + todoId , {
           method: 'DELETE'
-          // body: JSON.stringify({
-          //   'completed': newCompleted
-          // }),
-          // headers: {
-          //   'Content-Type': 'application/json'
-          // }
         })
           .then(function () {
             document.getElementById('error').className = 'hidden';

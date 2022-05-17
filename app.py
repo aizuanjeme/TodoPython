@@ -37,11 +37,12 @@ def create_todo():
     try:
         description = request.get_json()['description']
         todo = Todo(description=description, completed=False)
+        body['description'] = todo.description
         db.session.add(todo)
         db.session.commit()
-        body['id'] = todo.id
-        body['completed'] = todo.completed
-        body['description'] = todo.description
+        # body['id'] = todo.id
+        # body['completed'] = todo.completed
+        # body['description'] = todo.description
     except:
         error = True
         db.session.rollback()
@@ -66,7 +67,7 @@ def set_completed_todo(todo_id):
         db.session.rollback()
     finally:
         db.session.close()
-    return redirect(url_for('index'))
+        return redirect(url_for('index'))
 
 
 @app.route('/todos/<todo_id>', methods=['DELETE'])
@@ -74,12 +75,13 @@ def delete_todo(todo_id):
     try:
         todo = Todo.query.get(todo_id)
         db.session.delete(todo)
+        # Todo.query.filter_by(id=todo_id).delete()
         db.session.commit()
     except:
         db.session.rollback()
     finally:
         db.session.close()
-    return redirect(url_for('index'))
+    return jsonify({ 'success': True })
 
 @app.route('/')
 def index():
