@@ -14,7 +14,7 @@
       width: 300px;
     }
 
-    /* li {
+     li {
       clear: both;
     }
 
@@ -28,11 +28,11 @@
       font-size: 20px;
     }
 
-    .lists-wrapper,
+    /* .lists-wrapper,
     .todos-wrapper {
       display: inline-block;
       vertical-align: top;
-    } */
+    }  */
   </style>
 </head>
 
@@ -47,6 +47,7 @@
     <li>
       <input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif %} />
       {{d.description }}
+      <button class="delete-todo" data-id="{{ d.id }}">&cross;</button>
     </li>
     {% endfor %}
   </ul>
@@ -106,6 +107,32 @@
           document.getElementById('error').className = '';
         })
 
+    }
+
+
+    const deletebuttons = document.querySelectorAll('.delete-todo')
+    for (let i = 0; i < deletebuttons.length; i++) {
+      const deletebutton = deletebuttons[i];
+      deletebutton.onclick = function (e) {
+        console.log('event', e);
+        const newCompleted = e.target.checked;
+        const todoId = e.target.dataset['id'];
+        fetch('/todos/' + todoId , {
+          method: 'DELETE'
+          // body: JSON.stringify({
+          //   'completed': newCompleted
+          // }),
+          // headers: {
+          //   'Content-Type': 'application/json'
+          // }
+        })
+          .then(function () {
+            document.getElementById('error').className = 'hidden';
+          })
+          .catch(function () {
+            document.getElementById('error').className = '';
+          })
+      }
     }
 
 
