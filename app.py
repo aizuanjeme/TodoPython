@@ -21,17 +21,18 @@ class Todo(db.Model):
         'todolists.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Todo {self.id} name: {self.description}>'
+        return f'<Todo {self.id} name: {self.description} completed: {self.completed}>'
 
 
 class TodoList(db.Model):
     __tablename__ = 'todolists'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
+    completed = db.Column(db.Boolean, nullable=False, default=False)
     todos = db.relationship('Todo', backref='list', lazy=True)
 
     def __repr__(self):
-      return f'<TodoList {self.id} {self.name}>'
+      return f'<TodoList {self.id} {self.name} {self.todos} {self.completed}>'
 
 # db.create_all()
 
@@ -46,12 +47,15 @@ def create_todo():
     error = False
     try:
         description = request.get_json()['description']
-        todo = Todo(description=description, completed=False)
+        list_id = request.get_json()['list_id']
+        todo = Todo(description=description, completed=False, list_id=list_id)
         # body['description'] = todo.description
+        active_list = TodoList.query.get(list_id)
+        todo.list = active_list
         db.session.add(todo)
         db.session.commit()
-        body['id'] = todo.id
-        body['completed'] = todo.completed
+        # body['id'] = todo.id
+        # body['completed'] = todo.completed
         body['description'] = todo.description
     except:
         error = True
@@ -94,9 +98,62 @@ def delete_todo(todo_id):
     return jsonify({'success': True})
 
 
+@app.route('/lists/create', methods=['POST'])
+def create_todo_list():
+    body = {}
+    error = False
+    try:
+        name = request.get_json()['name']
+        todoList = TodoList(name=name, completed=False)
+        db.session.add(todoList)
+        db.session.commit()
+        body['name'] = todoList.name
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error == True:
+        abort(400)
+    else:
+        return jsonify(body)
+
+
+@app.route('/lists/<list_id>')
+def get_list_todos(list_id):
+  return render_template('index.html',
+  lists=TodoList.query.all(),
+  active_list=TodoList.query.get(list_id),
+  data=Todo.query.filter_by(list_id=list_id).order_by('id').all()
+)
+
+
+@app.route('/lists/<list_id>/set-completed', methods=['POST'])
+def set_completed_list(list_id):
+    error = False
+    try:
+        completed = request.get_json()['completed']
+        print('completed', completed)
+        list = TodoList.query.get(list_id)
+        list.completed = completed
+        for todo in list.todos:
+            todo.completed = True
+        db.session.commit()
+    except:
+        db.session.rollback()
+        error = True
+    finally:
+        db.session.close()
+    if error:
+        abort(500)
+    else:
+        return '', 200
+
+
 @app.route('/')
 def index():
-    return render_template('index.html', data=Todo.query.order_by('id').all())
+  return redirect(url_for('get_list_todos', list_id=1))
 
 
 # always include this at the bottom of your code
