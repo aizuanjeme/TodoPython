@@ -95,6 +95,7 @@
             }
           })
             .then(function () {
+              window.location.href = '/todos'
               document.getElementById('error').className = 'hidden';
             })
             .catch(function () {

@@ -32,7 +32,7 @@ class TodoList(db.Model):
     todos = db.relationship('Todo', backref='list', lazy=True)
 
     def __repr__(self):
-      return f'<TodoList {self.id} {self.name} {self.todos} {self.completed}>'
+        return f'<TodoList {self.id} {self.name} {self.todos} {self.completed}>'
 
 # db.create_all()
 
@@ -122,11 +122,12 @@ def create_todo_list():
 
 @app.route('/lists/<list_id>')
 def get_list_todos(list_id):
-  return render_template('index.html',
-  lists=TodoList.query.all(),
-  active_list=TodoList.query.get(list_id),
-  data=Todo.query.filter_by(list_id=list_id).order_by('id').all()
-)
+    return render_template('index.html',
+                           lists=TodoList.query.all(),
+                           active_list=TodoList.query.get(list_id),
+                           data=Todo.query.filter_by(
+                               list_id=list_id).order_by('id').all()
+                           )
 
 
 @app.route('/lists/<list_id>/set-completed', methods=['POST'])
@@ -153,7 +154,7 @@ def set_completed_list(list_id):
 
 @app.route('/')
 def index():
-  return redirect(url_for('get_list_todos', list_id=1))
+    return redirect(url_for('get_list_todos', list_id=1))
 
 
 # always include this at the bottom of your code
